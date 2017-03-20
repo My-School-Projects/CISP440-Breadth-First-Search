@@ -35,7 +35,7 @@ public:
 	}
 };
 
-vector<EdgeTrace> bfs(Node*, char);
+Node* breadth_first_search(Node*, char);
 bool contains(deque<EdgeTrace>, EdgeTrace);
 bool contains(vector<EdgeTrace>, EdgeTrace);
 
@@ -57,20 +57,21 @@ int main()
 	f->edges.push_back(c);
 	f->edges.push_back(e);
 
-	vector<EdgeTrace> vec = bfs(a, 'F');
+	Node* n = breadth_first_search(a, 'F');
 
-	for (EdgeTrace trace : vec)
+	cout << n->id;
+
+	while (!n->edges.empty())
 	{
-		cout << trace.node->id << " <-- ";
-		if (trace.origin)
-			cout << trace.origin->id;
-		cout << endl;
+		cout << " --> " << n->edges[0]->id;
+		n = n->edges[0];
 	}
+	cout << endl;
 
 	system("pause");
 }
 
-vector<EdgeTrace> bfs(Node* root, char c)
+Node* breadth_first_search(Node* root, char c)
 {
 	vector<EdgeTrace> visited;
 	deque<EdgeTrace> q;
@@ -86,7 +87,32 @@ vector<EdgeTrace> bfs(Node* root, char c)
 		
 		// if the current node is the one we're looking for, return
 		if (q.front().node->id == c)
-			return visited;
+		{
+			// reconstruct path in reverse order
+			
+			// the final node (the one searched for)
+			Node* current_node = new Node(visited.back().node->id);
+			// the node before the final node
+			Node* prev_node = new Node(visited.back().origin->id);
+			prev_node->edges.push_back(current_node);
+			// iterate backwards over visited
+			for (auto it = visited.rbegin(); it != visited.rend(); it++)
+			{
+				// locate the most recent reference to the current node
+				if (it->node->id == current_node->id)
+				{
+					// construct a node behind the currend node
+					prev_node = new Node(it->origin->id);
+					// point it forward to the current node
+					prev_node->edges.push_back(current_node);
+					
+					current_node = prev_node;
+
+					if (current_node->id == root->id)
+						return current_node;
+				}
+			}
+		}
 
 		// for each edge of the current node
 
@@ -104,7 +130,7 @@ vector<EdgeTrace> bfs(Node* root, char c)
 	}
 
 	// we didn't find the node - return an empty list
-	return vector<EdgeTrace>();
+	return new Node(NULL);
 }
 
 ///
