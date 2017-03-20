@@ -19,9 +19,25 @@ public:
 	}
 };
 
-vector<char> bfs(Node*);
-bool contains(deque<Node*>, Node*);
-bool contains(vector<char>, char);
+class EdgeTrace
+{
+public:
+	Node* node;
+	Node* origin;
+	EdgeTrace(Node* node, Node* origin = nullptr)
+	{
+		this->node = node;
+		this->origin = origin;
+	}
+	bool operator==(EdgeTrace e)
+	{
+		return this->node->id == e.node->id;
+	}
+};
+
+vector<EdgeTrace> bfs(Node*, char);
+bool contains(deque<EdgeTrace>, EdgeTrace);
+bool contains(vector<EdgeTrace>, EdgeTrace);
 
 int main()
 {
@@ -41,60 +57,68 @@ int main()
 	f->edges.push_back(c);
 	f->edges.push_back(e);
 
-	vector<char> vec = bfs(a);
+	vector<EdgeTrace> vec = bfs(a, 'F');
 
-	for (char c : vec)
+	for (EdgeTrace trace : vec)
 	{
-		cout << c << " ";
+		cout << trace.node->id << " <-- ";
+		if (trace.origin)
+			cout << trace.origin->id;
+		cout << endl;
 	}
-	cout << endl;
 
 	system("pause");
 }
 
-vector<char> bfs(Node* root)
+vector<EdgeTrace> bfs(Node* root, char c)
 {
-	vector<char> visited;
-	deque<Node*> q;
+	vector<EdgeTrace> visited;
+	deque<EdgeTrace> q;
 
-	q.push_back(root);
+	q.push_back(EdgeTrace(root));
 
 	while (!q.empty())
 	{
 		// the current node is the node at the front of the queue
 
 		// mark the current node as visited
-		visited.push_back(q.front()->id);
+		visited.push_back(q.front());
+		
+		// if the current node is the one we're looking for, return
+		if (q.front().node->id == c)
+			return visited;
 
 		// for each edge of the current node
 
-		for (unsigned i = 0; i < q.front()->edges.size(); i++)
+		for (unsigned i = 0; i < q.front().node->edges.size(); i++)
 		{
 			// if the node on that edge has not already been visited, and is not already in the queue
-			if (!contains(visited, q.front()->edges[i]->id) && !contains(q, q.front()->edges[i]))
+			if (!contains(visited, EdgeTrace(q.front().node->edges[i])) && !contains(q, EdgeTrace(q.front().node->edges[i])))
 			{
 				// push that node to q
-				q.push_back(q.front()->edges[i]);
+				q.emplace_back(q.front().node->edges[i], q.front().node);
 			}
 		}
 		// finished with the current node - pop it
 		q.pop_front();
 	}
-	return visited;
+
+	// we didn't find the node - return an empty list
+	return vector<EdgeTrace>();
 }
 
 ///
 /// Checks if q contains n
 ///
-bool contains(deque<Node*> q, Node* n)
+bool contains(deque<EdgeTrace> q, EdgeTrace e)
 {
-	return find(q.begin(), q.end(), n) != q.end();
+	return find(q.begin(), q.end(), e) != q.end();
 }
 
 ///
 /// Checks if v contains e
 ///
-bool contains(vector<char> v, char e)
+bool contains(vector<EdgeTrace> v, EdgeTrace e)
 {
 	return find(v.begin(), v.end(), e) != v.end();
 }
