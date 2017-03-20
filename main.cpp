@@ -13,9 +13,14 @@ public:
 	{
 		this->id = id;
 	}
+	bool operator==(Node n)
+	{
+		return this->id == n.id;
+	}
 };
 
 vector<char> bfs(Node*);
+bool contains(deque<Node*>, Node*);
 bool contains(vector<char>, char);
 
 int main()
@@ -50,9 +55,9 @@ int main()
 vector<char> bfs(Node* root)
 {
 	vector<char> visited;
-	queue<Node*> q;
+	deque<Node*> q;
 
-	q.push(root);
+	q.push_back(root);
 
 	while (!q.empty())
 	{
@@ -63,22 +68,33 @@ vector<char> bfs(Node* root)
 
 		// for each edge of the current node
 
-		for (int i = 0; i < q.front()->edges.size(); i++)
+		for (unsigned i = 0; i < q.front()->edges.size(); i++)
 		{
-			// if the node on that edge has not already been visited
-			if (!contains(visited, q.front()->edges[i]->id))
+			// if the node on that edge has not already been visited, and is not already in the queue
+			if (!contains(visited, q.front()->edges[i]->id) && !contains(q, q.front()->edges[i]))
 			{
 				// push that node to q
-				q.push(q.front()->edges[i]);
+				q.push_back(q.front()->edges[i]);
 			}
 		}
 		// finished with the current node - pop it
-		q.pop();
+		q.pop_front();
 	}
 	return visited;
 }
 
-bool contains(vector<char> vec, char c)
+///
+/// Checks if q contains n
+///
+bool contains(deque<Node*> q, Node* n)
 {
-	return find(vec.begin(), vec.end(), c) != vec.end();
+	return find(q.begin(), q.end(), n) != q.end();
+}
+
+///
+/// Checks if v contains e
+///
+bool contains(vector<char> v, char e)
+{
+	return find(v.begin(), v.end(), e) != v.end();
 }
