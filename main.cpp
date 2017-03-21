@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <queue>
 #include <algorithm>
@@ -36,37 +37,32 @@ public:
 };
 
 Node* breadth_first_search(Node*, char);
+Node* create_tree(ifstream&);
+void print_path(Node*, ostream&);
 bool contains(deque<EdgeTrace>, EdgeTrace);
 bool contains(vector<EdgeTrace>, EdgeTrace);
 
 int main()
 {
-	Node *a = new Node('A'), *b = new Node('B'), *c = new Node('C'),
-		 *d = new Node('D'), *e = new Node('E'), *f = new Node('F');
+	ifstream in;
+	in.open("triangle_test.txt");
+	
+	Node* test_tree = create_tree(in);
 
-	a->edges.push_back(c);
-	a->edges.push_back(b);
-	b->edges.push_back(a);
-	b->edges.push_back(d);
-	b->edges.push_back(e);
-	c->edges.push_back(a);
-	c->edges.push_back(f);
-	d->edges.push_back(b);
-	e->edges.push_back(b);
-	e->edges.push_back(f);
-	f->edges.push_back(c);
-	f->edges.push_back(e);
+	in.close();
+	in.open("triangle.txt");
 
-	Node* n = breadth_first_search(a, 'F');
+	Node* tree = create_tree(in);
 
-	cout << n->id;
+	in.close();
 
-	while (!n->edges.empty())
-	{
-		cout << " --> " << n->edges[0]->id;
-		n = n->edges[0];
-	}
-	cout << endl;
+	Node* n = breadth_first_search(test_tree, 9);
+
+	print_path(n, cout);
+
+	n = breadth_first_search(tree, 93);
+
+	print_path(n, cout);
 
 	system("pause");
 }
@@ -85,6 +81,8 @@ Node* breadth_first_search(Node* root, char c)
 		// mark the current node as visited
 		visited.push_back(q.front());
 		
+		int test = q.front().node->id;
+
 		// if the current node is the one we're looking for, return
 		if (q.front().node->id == c)
 		{
@@ -131,6 +129,59 @@ Node* breadth_first_search(Node* root, char c)
 
 	// we didn't find the node - return an empty list
 	return new Node(NULL);
+}
+
+Node* create_tree(ifstream& in)
+{
+	int level = 2;
+	int input;
+	in >> input;
+	Node* root = new Node(input);
+	vector<Node*>* level_above = new vector<Node*>(1);
+	vector<Node*>* current_level = nullptr;
+	(*level_above)[0] = root;
+
+	while (!in.eof())
+	{
+
+		current_level = new vector<Node*>(level);
+		for (int i = 0; i < level; i++)
+		{
+			in >> input;
+			Node* node = new Node(input);
+			(*current_level)[i] = node;
+			
+			// if this is not the first node in the layer
+			if (i > 0)
+			{
+				// add an edge from the node to its upper left
+				(*level_above)[i - 1]->edges.push_back(node);
+			}
+			// if this is not the last node in the layer
+			if (i < level - 1)
+			{
+				// add an edge from the node to its upper right
+				(*level_above)[i]->edges.push_back(node);
+			}
+		}
+		level++;
+		delete level_above;
+		level_above = current_level;
+	}
+	delete current_level;
+	return root;
+}
+
+void print_path(Node* n, ostream& out)
+{
+	out << int(n->id);
+
+	while (!n->edges.empty())
+	{
+		out << " --> " << int(n->edges[0]->id);
+		n = n->edges[0];
+	}
+	out << endl;
 }
 
 ///
